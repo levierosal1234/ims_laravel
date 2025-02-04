@@ -9,7 +9,7 @@ class User extends Authenticatable
     protected $table = 'tbluser'; // Map to tbluser table
 
     protected $fillable = [
-        'username', 'role', 'password', // existing columns
+        'username', 'role', 'password','main_module', // existing columns
         'order', 'unreceived', 'receiving', 'labeling', 'testing', 'cleaning', 'packing', 'stockroom' // new boolean columns
     ];
 

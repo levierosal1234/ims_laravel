@@ -150,7 +150,7 @@ class UserController extends Controller
             $userPrivileges = [
                 'main_module' => $selectedUser->main_module,
                 'sub_modules' => [
-                    'Order' => (bool) $selectedUser->order,
+                    'order' => (bool) $selectedUser->order,
                     'Unreceived' => (bool) $selectedUser->unreceived,
                     'Receiving' => (bool) $selectedUser->receiving,
                     'Labeling' => (bool) $selectedUser->labeling,

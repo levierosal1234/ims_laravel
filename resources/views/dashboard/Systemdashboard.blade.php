@@ -308,41 +308,42 @@
 
 
         <h5 class="text-center">Navigation</h5>
- <?php
-  // Fetch the main module from session
-$mainModule = session('main_module', ''); // Default to empty if not set
-$subModules = session('sub_modules', []); // Get submodules
+        <?php
+// In your blade template
+$mainModule = strtolower(session('main_module', '')); 
+$subModules = array_map('strtolower', session('sub_modules', [])); 
 
-// Fallback if the main module is not set, use the first available submodule as fallback
+// Fallback for main module
 $defaultModule = $mainModule ?: ($subModules ? reset($subModules) : 'dashboard');
 
-// Check permissions and module definitions as before
 function checkPermission($module, $mainModule, $subModules) {
-    // Special handling for dashboard
+    // Convert to lowercase for comparison
+    $module = strtolower($module);
+    $mainModule = strtolower($mainModule);
+    $subModules = array_map('strtolower', (array)$subModules);
+    
     if ($module === 'dashboard') {
         return true;
     }
-    // Check main module first, then submodules
     return $module === $mainModule || in_array($module, $subModules);
 }
 
-// Module definitions remain the same
 $modules = [
-    'orders' => 'Orders',
+    'order' => 'Order',
     'unreceived' => 'Unreceived',
-    'received' => 'Received',
+    'receiving' => 'Receiving',
     'labeling' => 'Labeling',
     'validation' => 'Validation',
     'testing' => 'Testing',
     'cleaning' => 'Cleaning',
     'packing' => 'Packing',
-    'stockroom' => 'Stockroom',
+    'stockroom' => 'Stockroom'
 ];
 ?>
 
 <script>
     window.defaultComponent = "<?= session('main_module', 'dashboard') ?>".toLowerCase();
-    window.allowedModules = <?= json_encode(session('sub_modules', [])) ?>;
+    window.allowedModules = <?= json_encode(array_map('strtolower', session('sub_modules', []))) ?>;
     window.mainModule = "<?= session('main_module', 'dashboard') ?>".toLowerCase();
 </script>
 
@@ -372,19 +373,19 @@ $modules = [
 
     <div id="main-content" class="content">
     <div id="app">
-        <!-- Hidden component triggers -->
-        <?php foreach ($modules as $module => $label): ?>
-            <a id="<?= $module ?>Link" 
-               style="display:none" 
-               href="#" 
-               @click.prevent="currentComponent = '<?= $module ?>'">
-                <?= $label ?>
-            </a>
-        <?php endforeach; ?>
-        
-        <!-- Vue component with main module as default -->
-        <component :is="currentComponent"></component>
-    </div>
+    <!-- Hidden component triggers -->
+    <?php foreach ($modules as $module => $label): ?>
+        <a id="<?= $module ?>Link" 
+           style="display:none" 
+           href="#" 
+           @click.prevent="loadContent('<?= $module ?>')">
+            <?= $label ?>
+        </a>
+    <?php endforeach; ?>
+    
+    <!-- Vue component with main module as default -->
+    <component :is="currentComponent"></component>
+</div>
 
     <div id="dynamic-content">
       @vite(['resources/js/app.js'])
@@ -616,24 +617,28 @@ document.addEventListener('DOMContentLoaded', function () {
     </div>
 </div>
 <script>
+// Initialize when DOM is loaded
 document.addEventListener("DOMContentLoaded", function() {
-    initializeUserSelect();
-    initializePrivilegeForm();
+    const privilegeForm = document.getElementById('privilegeForm');
+    if (privilegeForm) {
+        initializeUserSelect();
+        initializePrivilegeForm();
+    } else {
+        initializePrivilegeChecker();
+    }
 });
 
+// Admin Functions
 function initializeUserSelect() {
     const selectUser = document.getElementById('selectUser');
     
-    // Handle user selection changes
     selectUser.addEventListener('change', function() {
         const selectedValue = this.value;
         
-        // Update visibility of options
         Array.from(this.options).forEach(option => {
             option.style.display = option.value === selectedValue ? 'none' : 'block';
         });
         
-        // Hide default option if a user is selected
         if (selectedValue !== "") {
             const defaultOption = selectUser.querySelector('option[value=""]');
             if (defaultOption) {
@@ -641,7 +646,6 @@ function initializeUserSelect() {
             }
         }
 
-        // Fetch and display user privileges
         if (selectedValue) {
             fetchUserPrivileges(selectedValue);
         }
@@ -659,11 +663,32 @@ function initializePrivilegeForm() {
             const response = await saveUserPrivileges(formData);
             
             if (response.success) {
-                // Show success message
                 showNotification('Success', 'User privileges saved successfully!', 'success');
                 
-                // Immediately fetch and update the display
                 await fetchUserPrivileges(formData.user_id);
+                
+                // Update navigation with correct structure
+                updateUserNavigation({
+                    main_module: formData.main_module,
+                    sub_modules: formData.sub_modules,
+                    modules: {
+                        'order': 'Order',
+                        'unreceived': 'Unreceived',
+                        'receiving': 'Receiving',
+                        'labeling': 'Labeling',
+                        'validation': 'Validation',
+                        'testing': 'Testing',
+                        'cleaning': 'Cleaning',
+                        'packing': 'Packing',
+                        'stockroom': 'Stockroom'
+                    }
+                });
+
+                // Force component update
+                if (window.appInstance) {
+                    forceComponentUpdate(formData.main_module);
+                }
+
             } else {
                 showNotification('Error', response.message || 'Failed to save privileges', 'error');
             }
@@ -689,16 +714,40 @@ function collectFormData() {
 async function saveUserPrivileges(formData) {
     const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
     
-    const response = await fetch('/save-user-privileges', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-            'X-CSRF-TOKEN': csrfToken
-        },
-        body: JSON.stringify(formData)
-    });
-    
-    return await response.json();
+    try {
+        // First save the privileges
+        const response = await fetch('/save-user-privileges', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': csrfToken
+            },
+            body: JSON.stringify(formData)
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+            // Force session refresh
+            const refreshResponse = await fetch('/refresh-user-session', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': csrfToken
+                }
+            });
+            
+            const refreshResult = await refreshResponse.json();
+            if (refreshResult.success) {
+                return result;
+            }
+        }
+        
+        return result;
+    } catch (error) {
+        console.error('Error in save process:', error);
+        throw error;
+    }
 }
 
 async function fetchUserPrivileges(userId) {
@@ -718,13 +767,8 @@ function updateForm(data) {
         return;
     }
 
-    // Update Main Module
     updateMainModule(data);
-    
-    // Update Sub-Modules
     updateSubModules(data);
-    
-    // Update Stores
     updateStores(data);
 }
 
@@ -781,21 +825,97 @@ function updateStores(data) {
     document.getElementById('storeContainer').innerHTML = storeHTML;
 }
 
+// Navigation Update Functions
+function initializePrivilegeChecker() {
+    setInterval(checkForUpdates, 5000);
+}
+
+async function checkForUpdates() {
+    try {
+        const response = await fetch('/check-user-privileges');
+        const data = await response.json();
+        
+        if (data.success) {
+            console.log('Checking for updates:', data);
+            
+            window.defaultComponent = data.main_module;
+            window.allowedModules = data.sub_modules;
+            window.mainModule = data.main_module;
+
+            updateUserNavigation(data);
+        }
+    } catch (error) {
+        console.error('Error checking privileges:', error);
+    }
+}
+
+function updateUserNavigation(data) {
+    const nav = document.querySelector('nav.nav.flex-column');
+    if (!nav) return;
+
+    console.log('Updating navigation with:', data);
+
+    let navHTML = '';
+
+    // Add main module if it exists
+    if (data.main_module) {
+        navHTML += `
+            <a class="nav-link active" href="#" 
+               data-module="${data.main_module}"
+               onclick="document.getElementById('${data.main_module}Link').click()">
+                ${data.modules[data.main_module] || capitalizeFirst(data.main_module)}
+            </a>`;
+    }
+
+    // Add sub modules
+    if (Array.isArray(data.sub_modules)) {
+        data.sub_modules.forEach(module => {
+            if (module !== data.main_module) {
+                navHTML += `
+                    <a class="nav-link" href="#" 
+                       data-module="${module}"
+                       onclick="document.getElementById('${module}Link').click()">
+                        ${data.modules[module] || capitalizeFirst(module)}
+                    </a>`;
+            }
+        });
+    }
+
+    nav.innerHTML = navHTML;
+
+    // Update Vue component if needed
+    if (data.main_module && window.appInstance) {
+        forceComponentUpdate(data.main_module);
+    }
+}
+
+function forceComponentUpdate(moduleName) {
+    if (!window.appInstance) return;
+    
+    console.log('Forcing update to component:', moduleName);
+    window.appInstance.currentComponent = null;
+    
+    setTimeout(() => {
+        window.appInstance.currentComponent = moduleName;
+        console.log('Component updated to:', moduleName);
+    }, 0);
+}
+
+function capitalizeFirst(string) {
+    return string.charAt(0).toUpperCase() + string.slice(1);
+}
+
 function showNotification(title, message, type) {
-    // You can implement this using your preferred notification library
-    // For now, we'll use a simple alert, but you might want to use something like
-    // SweetAlert2 or Toastr for better user experience
     alert(`${title}: ${message}`);
 }
 
-// Initialize the form when the page loads
+// Initialize form when page loads
 window.onload = function() {
-    const selectedUserId = document.getElementById('selectUser').value;
+    const selectedUserId = document.getElementById('selectUser')?.value;
     if (selectedUserId) {
         fetchUserPrivileges(selectedUserId);
     }
 };
-
 </script>
 
 <!-- Add Store Modal -->

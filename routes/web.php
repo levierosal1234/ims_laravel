@@ -9,11 +9,13 @@ use App\Http\Controllers\StoreController;
 use App\Http\Models\Store;
 use App\Http\Controllers\AttendanceController;
 use App\Http\Controllers\UserPrivilegesController;
+use Illuminate\Support\Facades\Session;
 use App\Models\User;
-
 use Illuminate\Support\Facades\Schema;
 use App\Http\Controllers\USPSController;
 use App\Http\Controllers\UPSController;
+use App\Http\Controllers\UserSessionController;
+
 
 Route::get('/', function () {
     return view('welcome');
@@ -21,9 +23,18 @@ Route::get('/', function () {
 
 // Logout Route
 Route::post('/logout', function () {
+    // Clear all session data
+    Session::flush();
+    
+    // Logout the user
     Auth::logout();
+    
+    // Invalidate the session
     request()->session()->invalidate();
+    
+    // Regenerate the CSRF token
     request()->session()->regenerateToken();
+
     return redirect('/login');
 })->name('logout');
 
@@ -180,3 +191,9 @@ Route::get('/apis/ebay-login', action: function () {
 use App\Http\Controllers\TestTableController;
 
 Route::get('/test', [TestTableController::class, 'index']);
+
+
+Route::get('/check-user-privileges', [UserSessionController::class, 'checkUserPrivileges'])->middleware('auth');
+
+// In routes/web.php
+Route::post('/refresh-user-session', [UserSessionController::class, 'refreshSession']);
