@@ -1,45 +1,80 @@
 import { createApp } from 'vue';
-// Import your components
-import Orders from './components/orders.vue';
-import Labelling from './components/labelling.vue';
-import Unreceived from './components/Unreceived.vue';
+
+// Import components
+import Order from './components/orders.vue';
+import Labeling from './components/labeling.vue';
+import Unreceived from './components/unreceived.vue';
 import Cleaning from './components/cleaning.vue';
 import Packing from './components/packing.vue';
-import Received from './components/received.vue';
+import Receiving from './components/receiving.vue';
 import Stockroom from './components/stockroom.vue';
 import Testing from './components/testing.vue';
 import Validation from './components/validation.vue';
-import Searching from './components/searching.vue';  // Import searching component
 
-// Create the main app for the orders and other components
 const app = createApp({
-  data() {
-    return {
-      currentComponent: '', // Default component to display
-    };
-  },
-  components: {
-    orders: Orders,
-    labelling: Labelling,
-    unreceived: Unreceived,
-    cleaning: Cleaning,
-    packing: Packing,
-    received: Received,
-    stockroom: Stockroom,
-    testing: Testing,
-    validation: Validation,
-  },
+    data() {
+        return {
+            currentComponent: window.defaultComponent,
+        };
+    },
+    mounted() {
+        if (this.currentComponent) {
+            this.forceUpdate(this.currentComponent);
+        }
+    },
+    methods: {
+        loadContent(module) {
+            const moduleName = module;
+            const allowedModules = window.allowedModules || [];
+            const mainModule = window.mainModule;
+
+            if (!allowedModules.includes(moduleName) && moduleName !== mainModule) {
+                alert("You do not have permission to access this module.");
+                return;
+            }
+
+            this.forceUpdate(moduleName);
+        },
+        forceUpdate(moduleName) {
+            this.currentComponent = null;
+            this.$nextTick(() => {
+                this.currentComponent = moduleName;
+                this.updateActiveState(moduleName);
+            });
+        },
+        updateActiveState(moduleName) {
+            document.querySelectorAll('.nav .nav-link').forEach(link => {
+                if (link.getAttribute('data-module') === moduleName) {
+                    link.classList.add('active');
+                } else {
+                    link.classList.remove('active');
+                }
+            });
+        }
+    },
+    components: {
+        'order': Order,
+        'labeling': Labeling,
+        'unreceived': Unreceived,
+        'cleaning': Cleaning,
+        'packing': Packing,
+        'receiving': Receiving,
+        'stockroom': Stockroom,
+        'testing': Testing,
+        'validation': Validation,
+    }
 });
 
-// Mount the main app on #app div
-app.mount('#app');
+window.appInstance = app.mount('#app');
 
-// Create a separate app for the searching component
-const searchApp = createApp({
-  components: {
-    searching: Searching,  // Register searching component
-  },
-});
+window.loadContent = (module) => {
+    if (window.appInstance) {
+        window.appInstance.loadContent(module);
+    }
+};
 
-// Mount the searching app on #appsearch div
-searchApp.mount('#appsearch');
+window.forceComponentUpdate = (module) => {
+    if (window.appInstance) {
+        window.appInstance.forceUpdate(module.toLowerCase());
+    }
+};

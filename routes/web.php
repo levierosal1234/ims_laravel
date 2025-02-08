@@ -9,18 +9,30 @@ use App\Http\Controllers\StoreController;
 use App\Http\Models\Store;
 use App\Http\Controllers\AttendanceController;
 use App\Http\Controllers\UserPrivilegesController;
+use Illuminate\Support\Facades\Session;
 use App\Models\User;
-
 use Illuminate\Support\Facades\Schema;
 use App\Http\Controllers\USPSController;
 use App\Http\Controllers\UPSController;
+use App\Http\Controllers\UserSessionController;
+
 
 Route::get('/', function () {
     return view('welcome');
 });
 
 // Logout Route
+Route::get('/logout', function () {
+    Session::flush();
+    Auth::logout();
+    request()->session()->invalidate();
+    request()->session()->regenerateToken();
+    return redirect('/login')->with('message', 'Your session has expired. Please login again.');
+})->name('logout.expired');
+
+// Keep your existing POST route
 Route::post('/logout', function () {
+    Session::flush();
     Auth::logout();
     request()->session()->invalidate();
     request()->session()->regenerateToken();
@@ -49,6 +61,10 @@ Route::get('/dashboard/Systemdashboard', function () {
 // User Routes
 Route::post('/add-user', [UserController::class, 'store'])->name('add-user');
 Route::post('/update-password', [UserController::class, 'updatepassword'])->name('update-password');
+Route::get('/myprivileges', [UserController::class, 'showmyprivileges'])->name('myprivileges');
+Route::get('/users', [UserController::class, 'createdusers'])->name('user');
+Route::post('/update-user/{id}', [UserController::class, 'update'])->name('update-user');
+Route::delete('/delete-user/{id}', [UserController::class, 'destroy'])->name('delete-user');
 
 // System Design Routes
 Route::post('/update-system-design', [SystemDesignController::class, 'update'])->name('update.system.design');
@@ -176,3 +192,23 @@ Route::get('/apis/ebay-login', action: function () {
 use App\Http\Controllers\TestTableController;
 
 Route::get('/test', [TestTableController::class, 'index']);
+
+
+Route::get('/check-user-privileges', [UserSessionController::class, 'checkUserPrivileges'])->middleware('auth');
+
+// In routes/web.php
+Route::post('/refresh-user-session', [UserSessionController::class, 'refreshSession']);
+
+Route::get('/keep-alive', function () {
+    // Refresh the session
+    request()->session()->regenerate();
+    return response()->json(['status' => 'ok']);
+})->middleware('web');
+
+Route::get('/csrf-token', function () {
+    return response()->json(['token' => csrf_token()]);
+})->middleware('web');
+
+Route::middleware(['web', \App\Http\Middleware\RefreshSession::class])->group(function () {
+    // Your existing routes go here
+});

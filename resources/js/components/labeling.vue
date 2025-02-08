@@ -97,7 +97,7 @@ export default {
   methods: {
     async fetchInventory() {
       try {
-        const response = await axios.get(import.meta.env.VITE_API_URL);
+        const response = await axios.get('testing123');
         this.inventory = response.data.map((item) => ({
           ...item,
           imageUrl: item.imageUrl || 'https://via.placeholder.com/60x60?text=No+Image',

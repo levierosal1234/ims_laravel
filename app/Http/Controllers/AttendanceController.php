@@ -71,7 +71,7 @@ class AttendanceController extends Controller
             TIMESTAMPDIFF(
                 MINUTE,
                 TimeIn,
-                COALESCE(TimeOut, DATE_SUB(NOW(), INTERVAL 16 HOUR))
+                COALESCE(TimeOut, DATE_SUB(NOW(), INTERVAL 8 HOUR))
             )
         "));
 
@@ -86,24 +86,10 @@ class AttendanceController extends Controller
                 TIMESTAMPDIFF(
                     MINUTE,
                     TimeIn,
-                    COALESCE(TimeOut, DATE_SUB(NOW(), INTERVAL 16 HOUR))
+                    COALESCE(TimeOut, DATE_SUB(NOW(), INTERVAL 8 HOUR))
                 )
             "));
 
-            // Fetch user privileges from the database
-            $user = DB::table('tbluser')
-                ->select(
-                    'order',
-                    'unreceived',
-                    'receiving',
-                    'labeling',
-                    'testing',
-                    'cleaning',
-                    'packing',
-                    'stockroom'
-                )
-                ->where('id', $currentUserId)
-                ->first(); // Get a single record
 
         // Format hours as H:mm
         $todayHoursFormatted = sprintf('%d hrs %02d mins', intdiv($todayHours, 60), $todayHours % 60);
@@ -111,7 +97,7 @@ class AttendanceController extends Controller
 
         // Pass the data to the Blade view
         return view('dashboard.Systemdashboard', 
-            compact('employeeClocks', 'lastRecord', 'verylastRecord', 'todayHoursFormatted', 'weekHoursFormatted', 'employeeClocksThisweek', 'user'));
+            compact('employeeClocks', 'lastRecord', 'verylastRecord', 'todayHoursFormatted', 'weekHoursFormatted', 'employeeClocksThisweek'));
     }
 
     public function clockIn(Request $request)
@@ -235,7 +221,7 @@ class AttendanceController extends Controller
                 TIMESTAMPDIFF(
                     MINUTE,
                     TimeIn,
-                    COALESCE(TimeOut, DATE_SUB(NOW(), INTERVAL 16 HOUR))
+                    COALESCE(TimeOut, DATE_SUB(NOW(), INTERVAL 8 HOUR))
                 )
             "));
 
@@ -250,7 +236,7 @@ class AttendanceController extends Controller
                 TIMESTAMPDIFF(
                     MINUTE,
                     TimeIn,
-                    COALESCE(TimeOut, DATE_SUB(NOW(), INTERVAL 16 HOUR))
+                    COALESCE(TimeOut, DATE_SUB(NOW(), INTERVAL 8 HOUR))
                 )
             "));
 
