@@ -911,6 +911,96 @@ document.addEventListener('DOMContentLoaded', function () {
         </div>
     </div>
 </div>
+
+
+<style>
+/* Table Styles */
+.table-responsive-notes {
+    overflow-x: auto;
+}
+
+.table-notes {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.table-striped-notes tbody tr:nth-of-type(odd) {
+    background-color: rgba(0, 0, 0, 0.05);
+}
+
+.table-bordered-notes {
+    border: 1px solid #dee2e6;
+}
+
+.table-header-notes {
+    background-color: #343a40;
+    color: white;
+}
+
+.th-notes, .td-notes {
+    padding: 0.75rem;
+    vertical-align: middle;
+    border: 1px solid #dee2e6;
+}
+
+.tbody-notes .tr-notes:hover {
+    background-color: rgba(0, 0, 0, 0.075);
+}
+
+/* Notes Icon and Tooltip */
+.notes-icon {
+    cursor: pointer;
+    position: relative;
+}
+
+.tooltip-notes {
+    visibility: hidden;
+    position: absolute;
+    z-index: 1000;
+    background-color: #333;
+    color: white;
+    text-align: left;
+    padding: 15px 20px;
+    border-radius: 8px;
+    font-size: 14px;
+    min-width: 230px;
+    max-width: 250px;
+    width: max-content;
+    top: 50%;         /* Center vertically */
+    right: calc(100% + 20px); /* Position to the left with 20px gap */
+    transform: translateY(-50%); /* Center vertically */
+    white-space: pre-wrap;
+    word-break: break-word;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+    line-height: 1.5;
+}
+
+.tooltip-notes::after {
+    content: "";
+    position: absolute;
+    top: 50%;        /* Center arrow vertically */
+    left: 100%;      /* Position arrow on right side */
+    transform: translateY(-50%);
+    margin-left: 0;  /* Reset margin */
+    border-width: 8px;
+    border-style: solid;
+    border-color: transparent transparent transparent #333; /* Point arrow to right */
+}
+
+.notes-icon:hover .tooltip-notes {
+    visibility: visible;
+}
+
+@media (max-width: 767px) {
+    .td-notes {
+        white-space: normal;
+    }
+    
+    .text-muted-notes {
+        font-size: 0.85rem;
+    }
+}
+</style>
 <script>
 // Initialize when DOM is loaded
 document.addEventListener("DOMContentLoaded", function() {

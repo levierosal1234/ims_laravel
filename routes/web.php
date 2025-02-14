@@ -105,6 +105,7 @@ Route::post('/attendance/auto-clockout', [AttendanceController::class, 'autoCloc
 Route::post('/update-notes/{id}', [AttendanceController::class, 'updateNotes'])->name('update-notes');
 
 Route::get('/get-user-logs', [UserLogsController::class, 'getUserLogs']);
+Route::get('/get-time-records/{user_id}', [EmployeeClockController::class, 'getUserTimeRecords']);
 
 
 // AWS Inventory Routes
