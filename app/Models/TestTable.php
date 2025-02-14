@@ -9,5 +9,5 @@ class TestTable extends Model
 {
     use HasFactory;
 
-    protected $table = 'tblproduct'; // Define the actual table name
+    protected $table = 'aws_inventory'; // Define the actual table name
 }

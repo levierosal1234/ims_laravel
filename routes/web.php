@@ -15,6 +15,8 @@ use Illuminate\Support\Facades\Schema;
 use App\Http\Controllers\USPSController;
 use App\Http\Controllers\UPSController;
 use App\Http\Controllers\UserSessionController;
+use App\Http\Controllers\EmployeeClockController;
+use App\Http\Controllers\UserLogsController;
 
 
 Route::get('/', function () {
@@ -101,6 +103,8 @@ Route::post('/attendance/update-hours', [AttendanceController::class, 'updateHou
 Route::post('/attendance/filter', [AttendanceController::class, 'filterAttendanceAjax'])->name('attendance.filter.ajax');
 Route::post('/attendance/auto-clockout', [AttendanceController::class, 'autoClockOut'])->name('auto-clockout');
 Route::post('/update-notes/{id}', [AttendanceController::class, 'updateNotes'])->name('update-notes');
+
+Route::get('/get-user-logs', [UserLogsController::class, 'getUserLogs']);
 
 
 // AWS Inventory Routes
