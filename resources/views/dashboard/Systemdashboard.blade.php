@@ -212,8 +212,8 @@
     </style>
 </head>
 <body>
-    <!-- Navbar -->
-    <nav id="top-navbar" class="navbar navbar-expand-lg">
+ <!-- Navbar -->
+ <nav id="top-navbar" class="navbar navbar-expand-lg">
         <div class="container-fluid">
             <button id="burger-menu" class="navbar-toggler" type="button">
                 <span class="navbar-toggler-icon"></span>
@@ -243,13 +243,10 @@
         </div>
 
         <div class="search-bar d-flex align-items-center mx-auto" id="top-search">
-            <input 
-                type="text" 
-                class="form-control" 
-                placeholder="Search..." 
-                aria-label="Search"
-                id="search-input"
-            />
+        <div id="appsearch">
+           <searching @search="fetchInventory" />
+           </div>
+
         </div>
 
             <!-- Navbar Collapse for Desktop -->
@@ -265,10 +262,13 @@
 
                     <!-- Settings -->
                     <li class="nav-item">
-                        <a class="nav-link d-flex align-items-center justify-content-center" href="#" data-bs-toggle="modal" data-bs-target="#settingsModal">
-                            <i class="bi bi-gear me-2"></i>
-                            <span class="d-none d-lg-inline">Settings</span>
-                        </a>
+                    <a class="nav-link d-flex align-items-center justify-content-center" 
+                            href="#" 
+                            data-bs-toggle="modal" 
+                            data-bs-target="#settingsModal">
+                                <i class="bi bi-gear me-2"></i>
+                                <span class="d-none d-lg-inline">Settings</span>
+                            </a>
                     </li>
 
                     <!-- Logout -->
@@ -281,6 +281,9 @@
                         <form id="logout-form" action="{{ route('logout') }}" method="POST" style="display: none;">
                             @csrf
                         </form>
+                        <form id="logout-expired-form" action="{{ route('logout.expired') }}" method="GET" style="display: none;">
+                        </form>
+
                     </li>
                 </ul>
             </div>
@@ -469,6 +472,20 @@ document.addEventListener('DOMContentLoaded', function () {
                             <span class="d-none d-sm-inline"> Privileges</span>
                         </button>
                     </li>
+                    <!-- usertimerecord Tab -->
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link" id="usertimerecord-tab" data-bs-toggle="tab" data-bs-target="#usertimerecord" type="button" role="tab" aria-controls="usertimerecord" aria-selected="false">
+                            <i class="bi bi-clock"></i>
+                            <span class="d-none d-sm-inline"> Time Record</span>
+                        </button>
+                    </li>
+                    <!-- userlogs Tab -->
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link" id="userlogs-tab" data-bs-toggle="tab" data-bs-target="#userlogs" type="button" role="tab" aria-controls="userlogs" aria-selected="false">
+                            <i class="bi bi-person-lines-fill"></i>
+                            <span class="d-none d-sm-inline"> User Logs</span>
+                        </button>
+                    </li>
                     
                 </ul>
          <!-- Combined Tab for Title & Design -->
@@ -570,42 +587,320 @@ document.addEventListener('DOMContentLoaded', function () {
             <!-- Store List Tab Content END-->  
              
           
+            
+             
+          
             <div class="tab-pane fade" id="privilege" role="tabpanel" aria-labelledby="privilege-tab">
-    <h5>User Privileges</h5>
-    <form id="privilegeForm">
-    @csrf
-    <!-- Select User -->
-    @php
-        // Fetch all users directly in the Blade view
-        $Allusers = \App\Models\User::all();
-        // Determine which user is selected (default to admin if no user is selected)
-        $selectedUser = request()->has('user_id') ? \App\Models\User::find(request('user_id')) : \App\Models\User::where('username', 'admin')->first();
-    @endphp
+                <h5>User Privileges</h5>
+                <form id="privilegeForm">
+                    @csrf
+                    <!-- Select User -->
+                    @php
+                        // Fetch all users directly in the Blade view
+                        $Allusers = \App\Models\User::all();
+                        // Determine which user is selected (default to admin if no user is selected)
+                        $selectedUser = request()->has('user_id') ? \App\Models\User::find(request('user_id')) : \App\Models\User::where('username', 'admin')->first();
+                    @endphp
 
-    <label for="selectUser" class="form-label">Select User</label>
-    <select class="form-select" id="selectUser" name="user_id" required>
-        <!-- Default option (Select User) -->
+                    <label for="selectUser" class="form-label">Select User</label>
+                    <select class="form-select" id="selectUser" name="user_id" required>
+                        <!-- Default option (Select User) -->
 
-        @foreach ($Allusers as $userOption)
-            <option value="{{ $userOption->id }}"
-                {{ isset($selectedUser) && $selectedUser->id == $userOption->id ? 'selected' : '' }}>
-                {{ $userOption->username }}
-            </option>
-        @endforeach
-    </select>
+                        @foreach ($Allusers as $userOption)
+                            <option value="{{ $userOption->id }}"
+                                {{ isset($selectedUser) && $selectedUser->id == $userOption->id ? 'selected' : '' }}>
+                                {{ $userOption->username }}
+                            </option>
+                        @endforeach
+                    </select>
 
-    <!-- Main Module -->
-    <div id="mainModuleContainer"></div>
+                    <!-- Main Module -->
+                    <div id="mainModuleContainer"></div>
 
-    <!-- Sub-Modules Privileges -->
-    <div id="subModuleContainer"></div>
+                    <!-- Sub-Modules Privileges -->
+                    <div id="subModuleContainer"></div>
 
-    <!-- Stores -->
-    <div id="storeContainer"></div>
+                    <!-- Stores -->
+                    <div id="storeContainer"></div>
 
-    <button type="submit" class="btn btn-primary">Save Privileges</button>
-</form>
-</div>
+                    <button type="submit" class="btn btn-primary">Save Privileges</button>
+                </form>
+            </div>
+
+            <div class="tab-pane fade" id="usertimerecord" role="tabpanel" aria-labelledby="usertimerecord-tab">
+                <h5>USER TIME RECORD</h5>
+                
+                <!-- User Selection Form -->
+                <form id="usertimerecord" class="mb-4">
+                    @csrf
+                    <div class="row align-items-center g-2"> <!-- Changed to align-items-center and added g-2 for gap -->
+                        <div class="col-auto">
+                            <select class="form-select" id="selectUserDrop" name="user_id" required>
+                                @foreach ($Allusers as $userOption)
+                                    <option value="{{ $userOption->id }}"
+                                        {{ isset($selectedUser) && $selectedUser->id == $userOption->id ? 'selected' : '' }}>
+                                        {{ $userOption->username }}
+                                    </option>
+                                @endforeach
+                            </select>
+                        </div>
+                        
+                        <div class="col-auto">
+                            <input type="date" class="form-control" id="start_date" name="start_date" placeholder="Start Date">
+                        </div>
+
+                        <div class="col-auto">
+                            <input type="date" class="form-control" id="end_date" name="end_date" placeholder="End Date">
+                        </div>
+
+                        <div class="col-auto">
+                            <button type="button" class="btn btn-primary" id="filterRecords">Filter</button>
+                        </div>
+                    </div>
+                </form>
+
+                <!-- Time Records Table -->
+                <div class="table-responsive-notes mt-3">
+                    <table class="table-notes table-striped-notes table-bordered-notes">
+                        <thead class="table-header-notes">
+                            <tr class="tr-notes">
+                                <th class="th-notes">Details</th>
+                                <th class="th-notes">Total Hours</th>
+                                <th class="th-notes">Notes</th>
+                            </tr>
+                        </thead>
+                        <tbody id="timeRecordsBody" class="tbody-notes">
+                            <!-- Data populated through JavaScript -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="tab-pane fade" id="userlogs" role="tabpanel" aria-labelledby="userlogs-tab">
+                <h5>USER LOGS</h5>
+                
+                <!-- User Selection Form -->
+                <form id="userlogs" class="mb-4">
+                    @csrf
+                    <div class="row align-items-center g-2"> <!-- Changed to align-items-center and added g-2 for gap -->
+                        <div class="col-auto">
+                            <select class="form-select" id="selectUserDrop_logs" name="user_id" required>
+                                @foreach ($Allusers as $userOption)
+                                    <option value="{{ $userOption->id }}"
+                                        {{ isset($selectedUser) && $selectedUser->id == $userOption->id ? 'selected' : '' }}>
+                                        {{ $userOption->username }}
+                                    </option>
+                                @endforeach
+                            </select>
+                        </div>
+                        
+                        <div class="col-auto">
+                            <input type="date" class="form-control" id="start_date_logs" name="start_date_logs" placeholder="Start Date">
+                        </div>
+
+                        <div class="col-auto">
+                            <input type="date" class="form-control" id="end_date_logs" name="end_date_logs" placeholder="End Date">
+                        </div>
+
+                        <div class="col-auto">
+                            <button type="button" class="btn btn-primary" id="filter_logs">Filter</button>
+                        </div>
+                    </div>
+                </form>
+
+                <!-- Table -->
+                <div class="table-responsive-notes mt-3">
+                    <table class="table-notes table-striped-notes table-bordered-notes">
+                        <thead class="table-header-notes">
+                            <tr class="tr-notes">
+                                <th class="th-notes">username</th>
+                                <th class="th-notes">actions</th>
+                                <th class="th-notes">datetimelogs</th>
+                            </tr>
+                        </thead>
+                        <tbody id="userlogsData" class="tbody-notes">
+                            <!-- Data populated through JavaScript -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <script>
+            document.addEventListener('DOMContentLoaded', function() {
+                const selectUser = document.getElementById('selectUserDrop');
+                const startDate = document.getElementById('start_date');
+                const endDate = document.getElementById('end_date');
+                const filterButton = document.getElementById('filterRecords');
+                const isMobile = window.innerWidth < 768;
+
+                // Function to format date
+                function formatDate(date) {
+                    const options = { 
+                        month: 'short', 
+                        day: 'numeric', 
+                        year: 'numeric' 
+                    };
+                    return new Date(date).toLocaleDateString('en-US', options);
+                }
+
+                // Function to format time
+                function formatTime(date) {
+                    const options = { 
+                        hour: '2-digit', 
+                        minute: '2-digit',
+                        hour12: true 
+                    };
+                    return new Date(date).toLocaleTimeString('en-US', options);
+                }
+
+                // Function to fetch and display time records
+                function fetchTimeRecords() {
+                    const userId = selectUser.value;
+                    const start = startDate.value;
+                    const end = endDate.value;
+
+                    fetch(`/get-time-records/${userId}?start_date=${start}&end_date=${end}`)
+                        .then(response => response.json())
+                        .then(data => {
+                            const tbody = document.getElementById('timeRecordsBody');
+                            tbody.innerHTML = '';
+
+                            data.forEach(record => {
+                                const timeIn = new Date(record.TimeIn);
+                                const timeOut = record.TimeOut ? new Date(record.TimeOut) : null;
+                                const totalHours = record.TimeOut ? calculateHours(timeIn, timeOut) : 'Active';
+                                const formattedDate = formatDate(timeIn);
+
+                                const row = `
+                                <tr class="tr-notes">
+                                    <td class="td-notes">
+                                        ${formattedDate}<br>
+                                        <small class="text-muted-notes">IN: ${formatTime(timeIn)}</small><br>
+                                        <small class="text-muted-notes">OUT: ${timeOut ? formatTime(timeOut) : 'Not clocked out'}</small>
+                                    </td>
+                                    <td class="td-notes">${totalHours}</td>
+                                    ${isMobile ? 
+                                        `<td class="td-notes">
+                                            ${record.Notes ? 
+                                                `<div class="notes-icon">
+                                                    <i class="bi bi-sticky"></i>
+                                                    <span class="tooltip-notes">${record.Notes}</span>
+                                                </div>` : 
+                                                '-'
+                                            }
+                                        </td>` :
+                                        `<td class="td-notes notes-column">${record.Notes || '-'}</td>`
+                                    }
+                                </tr>
+                                `;
+                                tbody.innerHTML += row;
+                            });
+                        })
+                        .catch(error => {
+                            console.error('Error fetching time records:', error);
+                        });
+                }
+
+                // Calculate hours between two dates
+                function calculateHours(timeIn, timeOut) {
+                    const diff = timeOut - timeIn;
+                    const hours = Math.floor(diff / (1000 * 60 * 60));
+                    const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+                    return `${hours}h ${minutes}m`;
+                }
+
+                // Event listeners
+                selectUser.addEventListener('change', fetchTimeRecords);
+                filterButton.addEventListener('click', fetchTimeRecords);
+
+                // Initial load
+                fetchTimeRecords();
+            });
+            </script>
+            <script>
+            document.addEventListener('DOMContentLoaded', function() {
+                const selectUser = document.getElementById('selectUserDrop_logs');
+                const startDate_logs = document.getElementById('start_date_logs');
+                const endDate_logs = document.getElementById('end_date_logs');
+                const filterButton_logs = document.getElementById('filter_logs');
+                const isMobile = window.innerWidth < 768;
+
+                // Function to format date and time
+                function formatDateTime(dateTime) {
+                    const date = new Date(dateTime);
+                    return date.toLocaleString('en-US', {
+                        month: 'short',
+                        day: 'numeric',
+                        year: 'numeric',
+                        hour: '2-digit',
+                        minute: '2-digit',
+                        hour12: true
+                    });
+                }
+
+                // Function to fetch and display user logs
+                function fetchUserLogs() {
+                    const params = new URLSearchParams({
+                        user_id: selectUser.value,
+                        start_date_logs: startDate_logs.value,    // Changed from start_date
+                        end_date_logs: endDate_logs.value  
+                    });
+
+                    fetch(`/get-user-logs?${params}`)
+                        .then(response => response.json())
+                        .then(data => {
+                            const tbody = document.getElementById('userlogsData');
+                            tbody.innerHTML = '';
+
+                            data.forEach(log => {
+                                const row = `
+                                    <tr class="tr-notes">
+                                        <td class="td-notes">${log.username}</td>
+                                        
+                                        ${isMobile ? 
+                                            `<td class="td-notes">
+                                                ${log.actions ? 
+                                                    `<div class="notes-icon">
+                                                        <i class="bi bi-sticky"></i>
+                                                        <span class="tooltip-notes">${log.actions}</span>
+                                                    </div>` : 
+                                                    '-'
+                                                }
+                                            </td>` :
+                                            `<td class="td-notes notes-column">${log.actions || '-'}</td>`
+                                        }
+                                        <td class="td-notes">${formatDateTime(log.datetimelogs)}</td>
+                                    </tr>
+                                `;
+                                tbody.innerHTML += row;
+                            });
+
+                            if (data.length === 0) {
+                                tbody.innerHTML = `
+                                    <tr class="tr-notes">
+                                        <td colspan="3" class="td-notes text-center">No logs found</td>
+                                    </tr>
+                                `;
+                            }
+                        })
+                        .catch(error => {
+                            console.error('Error fetching user logs:', error);
+                            document.getElementById('userlogsData').innerHTML = `
+                                <tr class="tr-notes">
+                                    <td colspan="3" class="td-notes text-center text-danger">Error loading logs</td>
+                                </tr>
+                            `;
+                        });
+                }
+
+                // Event listeners
+                selectUser.addEventListener('change', fetchUserLogs);
+                filterButton_logs.addEventListener('click', fetchUserLogs);
+
+                // Initial load
+                fetchUserLogs();
+            });
+            </script>
 
 
              </div>
@@ -659,6 +954,9 @@ function initializePrivilegeForm() {
         e.preventDefault();
         
         try {
+            // Refresh CSRF token before submitting
+            await refreshCsrfToken();
+            
             const formData = collectFormData();
             const response = await saveUserPrivileges(formData);
             
@@ -667,7 +965,6 @@ function initializePrivilegeForm() {
                 
                 await fetchUserPrivileges(formData.user_id);
                 
-                // Update navigation with correct structure
                 updateUserNavigation({
                     main_module: formData.main_module,
                     sub_modules: formData.sub_modules,
@@ -684,10 +981,27 @@ function initializePrivilegeForm() {
                     }
                 });
 
-                // Force component update
                 if (window.appInstance) {
                     forceComponentUpdate(formData.main_module);
                 }
+
+                // Get the modal element
+                const modalEl = document.getElementById('settingsModal');
+                modalEl.style.display = 'none';
+                document.querySelectorAll('.modal-backdrop').forEach(backdrop => backdrop.remove());
+                document.body.classList.remove('modal-open');
+                document.body.style.removeProperty('padding-right');
+                modalEl.classList.remove('show');
+                
+                // Re-bind modal trigger
+                const settingsButton = document.querySelector('[data-bs-toggle="modal"][data-bs-target="#settingsModal"]');
+                if (settingsButton) {
+                    settingsButton.setAttribute('data-bs-toggle', 'modal');
+                    settingsButton.setAttribute('data-bs-target', '#settingsModal');
+                }
+
+                form.classList.remove('was-validated');
+                initializeUserSelect();
 
             } else {
                 showNotification('Error', response.message || 'Failed to save privileges', 'error');
@@ -697,6 +1011,19 @@ function initializePrivilegeForm() {
             showNotification('Error', 'An unexpected error occurred', 'error');
         }
     });
+}
+
+// Add this new function to refresh CSRF token
+async function refreshCsrfToken() {
+    try {
+        const response = await fetch('/csrf-token');
+        const data = await response.json();
+        document.querySelector('meta[name="csrf-token"]').setAttribute('content', data.token);
+        return true;
+    } catch (error) {
+        console.error('Error refreshing CSRF token:', error);
+        return false;
+    }
 }
 
 function collectFormData() {
@@ -1099,6 +1426,41 @@ window.onload = function() {
     </div>
 </div>
 
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const profileModal = document.getElementById('profileModal');
+
+    profileModal.addEventListener('shown.bs.modal', function () {
+        const defaultTab = document.querySelector('#attendance-tab');
+        const defaultTabPane = document.querySelector('#attendance');
+
+        // Ensure Bootstrap properly activates the tab
+        if (defaultTab && defaultTabPane) {
+            new bootstrap.Tab(defaultTab).show();
+        }
+    });
+
+    profileModal.addEventListener('hidden.bs.modal', function () {
+        // Reset all tabs
+        document.querySelectorAll('#profileTab .nav-link').forEach(tab => {
+            tab.classList.remove('active');
+            tab.setAttribute('aria-selected', 'false');
+        });
+
+        document.querySelectorAll('#profileTabContent .tab-pane').forEach(tabPane => {
+            tabPane.classList.remove('show', 'active');
+        });
+
+        // Reapply the default tab using Bootstrap's method
+        const defaultTab = document.querySelector('#attendance-tab');
+        if (defaultTab) {
+            new bootstrap.Tab(defaultTab).show();
+        }
+    });
+});
+</script>
+
 <!-- PROFILE Modal -->
 <div class="modal fade" id="profileModal" tabindex="-1" aria-labelledby="profileModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-lg">
@@ -1108,7 +1470,7 @@ window.onload = function() {
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
-                <ul class="nav nav-tabs" id="settingsTab" role="tablist">
+                <ul class="nav nav-tabs" id="profileTab" role="tablist">
                     <li class="nav-item" role="presentation">
                         <button class="nav-link active" id="attendance-tab" data-bs-toggle="tab" data-bs-target="#attendance" type="button" role="tab" aria-controls="attendance" aria-selected="true">
                             <i class="bi bi-calendar-check"></i>
@@ -2054,6 +2416,11 @@ document.getElementById('selectMarketplace').addEventListener('change', updateMa
         const logoutSound = document.getElementById('logout-sound');
     // Show the logout confirmation modal
     function showLogoutModal() {
+
+        if (document.getElementsByName('_token').length === 0) {
+        window.location.href = '/logout';
+        return;
+    }
         const logoutModal = new bootstrap.Modal(document.getElementById('logoutModal'));
         logoutModal.show();
         logoutSound.play();
@@ -2063,6 +2430,19 @@ document.getElementById('selectMarketplace').addEventListener('change', updateMa
     document.getElementById('confirmLogout').addEventListener('click', function () {
         document.getElementById('logout-form').submit();
     });
+
+
+    function keepSessionAlive() {
+    fetch('/keep-alive', {
+        method: 'GET',
+        headers: {
+            'X-Requested-With': 'XMLHttpRequest'
+        }
+    }).catch(error => console.log('Session refresh failed:', error));
+}
+
+        // Ping every 10 minutes
+        setInterval(keepSessionAlive, 600000);
 </script>
 
     <!-- Footer -->
