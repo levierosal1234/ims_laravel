@@ -7,7 +7,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
 
-use App\Services\UserLogService; // Add this import
+use App\Services\UserLogService;
 
 class AttendanceController extends Controller
 {
@@ -322,6 +322,10 @@ class AttendanceController extends Controller
             ->update(['Notes' => $validatedData['notes']]);
     
         if ($updated) {
+
+            // Log using service
+            $this->userLogService->log('Save user time clock notes');
+
             return response()->json([
                 'success' => true,
                 'message' => 'Notes updated successfully.',

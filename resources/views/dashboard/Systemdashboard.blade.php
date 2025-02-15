@@ -713,9 +713,9 @@ document.addEventListener('DOMContentLoaded', function () {
                     <table class="table-notes table-striped-notes table-bordered-notes">
                         <thead class="table-header-notes">
                             <tr class="tr-notes">
-                                <th class="th-notes">username</th>
-                                <th class="th-notes">actions</th>
-                                <th class="th-notes">datetimelogs</th>
+                                <th class="th-notes">User</th>
+                                <th class="th-notes">Actions</th>
+                                <th class="th-notes">Date</th>
                             </tr>
                         </thead>
                         <tbody id="userlogsData" class="tbody-notes">
@@ -837,6 +837,16 @@ document.addEventListener('DOMContentLoaded', function () {
                         hour12: true
                     });
                 }
+                // Function to format date only
+                function formatDate(dateTime) {
+                    const date = new Date(dateTime);
+                    const options = { 
+                        month: 'short', 
+                        day: 'numeric', 
+                        year: 'numeric'
+                    };
+                    return date.toLocaleDateString('en-US', options);
+                }
 
                 // Function to fetch and display user logs
                 function fetchUserLogs() {
@@ -869,7 +879,7 @@ document.addEventListener('DOMContentLoaded', function () {
                                             </td>` :
                                             `<td class="td-notes notes-column">${log.actions || '-'}</td>`
                                         }
-                                        <td class="td-notes">${formatDateTime(log.datetimelogs)}</td>
+                                        <td class="td-notes">${formatDate(log.datetimelogs)}</td>
                                     </tr>
                                 `;
                                 tbody.innerHTML += row;

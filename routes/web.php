@@ -93,7 +93,6 @@ Route::post('/add-store', [StoreController::class, 'addstore'])->name('add-store
 Route::delete('/delete-store/{id}', [StoreController::class, 'delete'])->name('delete-store');
 Route::get('/fetch-marketplaces', [StoreController::class, 'fetchMarketplaces']);
 Route::get('/fetch-marketplaces-tblstores', [StoreController::class, 'fetchMarketplacestblstores'])->name('fetchMarketplacestblstores');
-Route::post('/user/privileges/update', [UserPrivilegesController::class, 'update'])->name('update-user-privileges');
 
 Route::get('/dashboard/Systemdashboard', [AttendanceController::class, 'attendance']);
 Route::post('/attendance/clockin', [AttendanceController::class, 'clockIn'])->name('attendance.clockin');
