@@ -1,6 +1,6 @@
 <template>
   <div class="vue-container">
-    <h1 class="vue-title">Cleaning Module</h1>
+    <h1 class="vue-title">Stockroom Module</h1>
     <div class="table-container">
       <table>
         <thead>

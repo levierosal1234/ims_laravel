@@ -472,6 +472,20 @@ document.addEventListener('DOMContentLoaded', function () {
                             <span class="d-none d-sm-inline"> Privileges</span>
                         </button>
                     </li>
+                    <!-- usertimerecord Tab -->
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link" id="usertimerecord-tab" data-bs-toggle="tab" data-bs-target="#usertimerecord" type="button" role="tab" aria-controls="usertimerecord" aria-selected="false">
+                            <i class="bi bi-clock"></i>
+                            <span class="d-none d-sm-inline"> Time Record</span>
+                        </button>
+                    </li>
+                    <!-- userlogs Tab -->
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link" id="userlogs-tab" data-bs-toggle="tab" data-bs-target="#userlogs" type="button" role="tab" aria-controls="userlogs" aria-selected="false">
+                            <i class="bi bi-person-lines-fill"></i>
+                            <span class="d-none d-sm-inline"> User Logs</span>
+                        </button>
+                    </li>
                     
                 </ul>
          <!-- Combined Tab for Title & Design -->
@@ -573,42 +587,330 @@ document.addEventListener('DOMContentLoaded', function () {
             <!-- Store List Tab Content END-->  
              
           
+            
+             
+          
             <div class="tab-pane fade" id="privilege" role="tabpanel" aria-labelledby="privilege-tab">
-    <h5>User Privileges</h5>
-    <form id="privilegeForm">
-    @csrf
-    <!-- Select User -->
-    @php
-        // Fetch all users directly in the Blade view
-        $Allusers = \App\Models\User::all();
-        // Determine which user is selected (default to admin if no user is selected)
-        $selectedUser = request()->has('user_id') ? \App\Models\User::find(request('user_id')) : \App\Models\User::where('username', 'admin')->first();
-    @endphp
+                <h5>User Privileges</h5>
+                <form id="privilegeForm">
+                    @csrf
+                    <!-- Select User -->
+                    @php
+                        // Fetch all users directly in the Blade view
+                        $Allusers = \App\Models\User::all();
+                        // Determine which user is selected (default to admin if no user is selected)
+                        $selectedUser = request()->has('user_id') ? \App\Models\User::find(request('user_id')) : \App\Models\User::where('username', 'admin')->first();
+                    @endphp
 
-    <label for="selectUser" class="form-label">Select User</label>
-    <select class="form-select" id="selectUser" name="user_id" required>
-        <!-- Default option (Select User) -->
+                    <label for="selectUser" class="form-label">Select User</label>
+                    <select class="form-select" id="selectUser" name="user_id" required>
+                        <!-- Default option (Select User) -->
 
-        @foreach ($Allusers as $userOption)
-            <option value="{{ $userOption->id }}"
-                {{ isset($selectedUser) && $selectedUser->id == $userOption->id ? 'selected' : '' }}>
-                {{ $userOption->username }}
-            </option>
-        @endforeach
-    </select>
+                        @foreach ($Allusers as $userOption)
+                            <option value="{{ $userOption->id }}"
+                                {{ isset($selectedUser) && $selectedUser->id == $userOption->id ? 'selected' : '' }}>
+                                {{ $userOption->username }}
+                            </option>
+                        @endforeach
+                    </select>
 
-    <!-- Main Module -->
-    <div id="mainModuleContainer"></div>
+                    <!-- Main Module -->
+                    <div id="mainModuleContainer"></div>
 
-    <!-- Sub-Modules Privileges -->
-    <div id="subModuleContainer"></div>
+                    <!-- Sub-Modules Privileges -->
+                    <div id="subModuleContainer"></div>
 
-    <!-- Stores -->
-    <div id="storeContainer"></div>
+                    <!-- Stores -->
+                    <div id="storeContainer"></div>
 
-    <button type="submit" class="btn btn-primary">Save Privileges</button>
-</form>
-</div>
+                    <button type="submit" class="btn btn-primary">Save Privileges</button>
+                </form>
+            </div>
+
+            <div class="tab-pane fade" id="usertimerecord" role="tabpanel" aria-labelledby="usertimerecord-tab">
+                <h5>USER TIME RECORD</h5>
+                
+                <!-- User Selection Form -->
+                <form id="usertimerecord" class="mb-4">
+                    @csrf
+                    <div class="row align-items-center g-2"> <!-- Changed to align-items-center and added g-2 for gap -->
+                        <div class="col-auto">
+                            <select class="form-select" id="selectUserDrop" name="user_id" required>
+                                @foreach ($Allusers as $userOption)
+                                    <option value="{{ $userOption->id }}"
+                                        {{ isset($selectedUser) && $selectedUser->id == $userOption->id ? 'selected' : '' }}>
+                                        {{ $userOption->username }}
+                                    </option>
+                                @endforeach
+                            </select>
+                        </div>
+                        
+                        <div class="col-auto">
+                            <input type="date" class="form-control" id="start_date" name="start_date" placeholder="Start Date">
+                        </div>
+
+                        <div class="col-auto">
+                            <input type="date" class="form-control" id="end_date" name="end_date" placeholder="End Date">
+                        </div>
+
+                        <div class="col-auto">
+                            <button type="button" class="btn btn-primary" id="filterRecords">Filter</button>
+                        </div>
+                    </div>
+                </form>
+
+                <!-- Time Records Table -->
+                <div class="table-responsive-notes mt-3">
+                    <table class="table-notes table-striped-notes table-bordered-notes">
+                        <thead class="table-header-notes">
+                            <tr class="tr-notes">
+                                <th class="th-notes">Details</th>
+                                <th class="th-notes">Total Hours</th>
+                                <th class="th-notes">Notes</th>
+                            </tr>
+                        </thead>
+                        <tbody id="timeRecordsBody" class="tbody-notes">
+                            <!-- Data populated through JavaScript -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="tab-pane fade" id="userlogs" role="tabpanel" aria-labelledby="userlogs-tab">
+                <h5>USER LOGS</h5>
+                
+                <!-- User Selection Form -->
+                <form id="userlogs" class="mb-4">
+                    @csrf
+                    <div class="row align-items-center g-2"> <!-- Changed to align-items-center and added g-2 for gap -->
+                        <div class="col-auto">
+                            <select class="form-select" id="selectUserDrop_logs" name="user_id" required>
+                                @foreach ($Allusers as $userOption)
+                                    <option value="{{ $userOption->id }}"
+                                        {{ isset($selectedUser) && $selectedUser->id == $userOption->id ? 'selected' : '' }}>
+                                        {{ $userOption->username }}
+                                    </option>
+                                @endforeach
+                            </select>
+                        </div>
+                        
+                        <div class="col-auto">
+                            <input type="date" class="form-control" id="start_date_logs" name="start_date_logs" placeholder="Start Date">
+                        </div>
+
+                        <div class="col-auto">
+                            <input type="date" class="form-control" id="end_date_logs" name="end_date_logs" placeholder="End Date">
+                        </div>
+
+                        <div class="col-auto">
+                            <button type="button" class="btn btn-primary" id="filter_logs">Filter</button>
+                        </div>
+                    </div>
+                </form>
+
+                <!-- Table -->
+                <div class="table-responsive-notes mt-3">
+                    <table class="table-notes table-striped-notes table-bordered-notes">
+                        <thead class="table-header-notes">
+                            <tr class="tr-notes">
+                                <th class="th-notes">User</th>
+                                <th class="th-notes">Actions</th>
+                                <th class="th-notes">Date</th>
+                            </tr>
+                        </thead>
+                        <tbody id="userlogsData" class="tbody-notes">
+                            <!-- Data populated through JavaScript -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <script>
+            document.addEventListener('DOMContentLoaded', function() {
+                const selectUser = document.getElementById('selectUserDrop');
+                const startDate = document.getElementById('start_date');
+                const endDate = document.getElementById('end_date');
+                const filterButton = document.getElementById('filterRecords');
+                const isMobile = window.innerWidth < 768;
+
+                // Function to format date
+                function formatDate(date) {
+                    const options = { 
+                        month: 'short', 
+                        day: 'numeric', 
+                        year: 'numeric' 
+                    };
+                    return new Date(date).toLocaleDateString('en-US', options);
+                }
+
+                // Function to format time
+                function formatTime(date) {
+                    const options = { 
+                        hour: '2-digit', 
+                        minute: '2-digit',
+                        hour12: true 
+                    };
+                    return new Date(date).toLocaleTimeString('en-US', options);
+                }
+
+                // Function to fetch and display time records
+                function fetchTimeRecords() {
+                    const userId = selectUser.value;
+                    const start = startDate.value;
+                    const end = endDate.value;
+
+                    fetch(`/get-time-records/${userId}?start_date=${start}&end_date=${end}`)
+                        .then(response => response.json())
+                        .then(data => {
+                            const tbody = document.getElementById('timeRecordsBody');
+                            tbody.innerHTML = '';
+
+                            data.forEach(record => {
+                                const timeIn = new Date(record.TimeIn);
+                                const timeOut = record.TimeOut ? new Date(record.TimeOut) : null;
+                                const totalHours = record.TimeOut ? calculateHours(timeIn, timeOut) : 'Active';
+                                const formattedDate = formatDate(timeIn);
+
+                                const row = `
+                                <tr class="tr-notes">
+                                    <td class="td-notes">
+                                        ${formattedDate}<br>
+                                        <small class="text-muted-notes">IN: ${formatTime(timeIn)}</small><br>
+                                        <small class="text-muted-notes">OUT: ${timeOut ? formatTime(timeOut) : 'Not clocked out'}</small>
+                                    </td>
+                                    <td class="td-notes">${totalHours}</td>
+                                    ${isMobile ? 
+                                        `<td class="td-notes">
+                                            ${record.Notes ? 
+                                                `<div class="notes-icon">
+                                                    <i class="bi bi-sticky"></i>
+                                                    <span class="tooltip-notes">${record.Notes}</span>
+                                                </div>` : 
+                                                '-'
+                                            }
+                                        </td>` :
+                                        `<td class="td-notes notes-column">${record.Notes || '-'}</td>`
+                                    }
+                                </tr>
+                                `;
+                                tbody.innerHTML += row;
+                            });
+                        })
+                        .catch(error => {
+                            console.error('Error fetching time records:', error);
+                        });
+                }
+
+                // Calculate hours between two dates
+                function calculateHours(timeIn, timeOut) {
+                    const diff = timeOut - timeIn;
+                    const hours = Math.floor(diff / (1000 * 60 * 60));
+                    const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+                    return `${hours}h ${minutes}m`;
+                }
+
+                // Event listeners
+                selectUser.addEventListener('change', fetchTimeRecords);
+                filterButton.addEventListener('click', fetchTimeRecords);
+
+                // Initial load
+                fetchTimeRecords();
+            });
+            </script>
+            <script>
+            document.addEventListener('DOMContentLoaded', function() {
+                const selectUser = document.getElementById('selectUserDrop_logs');
+                const startDate_logs = document.getElementById('start_date_logs');
+                const endDate_logs = document.getElementById('end_date_logs');
+                const filterButton_logs = document.getElementById('filter_logs');
+                const isMobile = window.innerWidth < 768;
+
+                // Function to format date and time
+                function formatDateTime(dateTime) {
+                    const date = new Date(dateTime);
+                    return date.toLocaleString('en-US', {
+                        month: 'short',
+                        day: 'numeric',
+                        year: 'numeric',
+                        hour: '2-digit',
+                        minute: '2-digit',
+                        hour12: true
+                    });
+                }
+                // Function to format date only
+                function formatDate(dateTime) {
+                    const date = new Date(dateTime);
+                    const options = { 
+                        month: 'short', 
+                        day: 'numeric', 
+                        year: 'numeric'
+                    };
+                    return date.toLocaleDateString('en-US', options);
+                }
+
+                // Function to fetch and display user logs
+                function fetchUserLogs() {
+                    const params = new URLSearchParams({
+                        user_id: selectUser.value,
+                        start_date_logs: startDate_logs.value,    // Changed from start_date
+                        end_date_logs: endDate_logs.value  
+                    });
+
+                    fetch(`/get-user-logs?${params}`)
+                        .then(response => response.json())
+                        .then(data => {
+                            const tbody = document.getElementById('userlogsData');
+                            tbody.innerHTML = '';
+
+                            data.forEach(log => {
+                                const row = `
+                                    <tr class="tr-notes">
+                                        <td class="td-notes">${log.username}</td>
+                                        
+                                        ${isMobile ? 
+                                            `<td class="td-notes">
+                                                ${log.actions ? 
+                                                    `<div class="notes-icon">
+                                                        <i class="bi bi-sticky"></i>
+                                                        <span class="tooltip-notes">${log.actions}</span>
+                                                    </div>` : 
+                                                    '-'
+                                                }
+                                            </td>` :
+                                            `<td class="td-notes notes-column">${log.actions || '-'}</td>`
+                                        }
+                                        <td class="td-notes">${formatDate(log.datetimelogs)}</td>
+                                    </tr>
+                                `;
+                                tbody.innerHTML += row;
+                            });
+
+                            if (data.length === 0) {
+                                tbody.innerHTML = `
+                                    <tr class="tr-notes">
+                                        <td colspan="3" class="td-notes text-center">No logs found</td>
+                                    </tr>
+                                `;
+                            }
+                        })
+                        .catch(error => {
+                            console.error('Error fetching user logs:', error);
+                            document.getElementById('userlogsData').innerHTML = `
+                                <tr class="tr-notes">
+                                    <td colspan="3" class="td-notes text-center text-danger">Error loading logs</td>
+                                </tr>
+                            `;
+                        });
+                }
+
+                // Event listeners
+                selectUser.addEventListener('change', fetchUserLogs);
+                filterButton_logs.addEventListener('click', fetchUserLogs);
+
+                // Initial load
+                fetchUserLogs();
+            });
+            </script>
 
 
              </div>
@@ -619,6 +921,96 @@ document.addEventListener('DOMContentLoaded', function () {
         </div>
     </div>
 </div>
+
+
+<style>
+/* Table Styles */
+.table-responsive-notes {
+    overflow-x: auto;
+}
+
+.table-notes {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.table-striped-notes tbody tr:nth-of-type(odd) {
+    background-color: rgba(0, 0, 0, 0.05);
+}
+
+.table-bordered-notes {
+    border: 1px solid #dee2e6;
+}
+
+.table-header-notes {
+    background-color: #343a40;
+    color: white;
+}
+
+.th-notes, .td-notes {
+    padding: 0.75rem;
+    vertical-align: middle;
+    border: 1px solid #dee2e6;
+}
+
+.tbody-notes .tr-notes:hover {
+    background-color: rgba(0, 0, 0, 0.075);
+}
+
+/* Notes Icon and Tooltip */
+.notes-icon {
+    cursor: pointer;
+    position: relative;
+}
+
+.tooltip-notes {
+    visibility: hidden;
+    position: absolute;
+    z-index: 1000;
+    background-color: #333;
+    color: white;
+    text-align: left;
+    padding: 15px 20px;
+    border-radius: 8px;
+    font-size: 14px;
+    min-width: 230px;
+    max-width: 250px;
+    width: max-content;
+    top: 50%;         /* Center vertically */
+    right: calc(100% + 20px); /* Position to the left with 20px gap */
+    transform: translateY(-50%); /* Center vertically */
+    white-space: pre-wrap;
+    word-break: break-word;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+    line-height: 1.5;
+}
+
+.tooltip-notes::after {
+    content: "";
+    position: absolute;
+    top: 50%;        /* Center arrow vertically */
+    left: 100%;      /* Position arrow on right side */
+    transform: translateY(-50%);
+    margin-left: 0;  /* Reset margin */
+    border-width: 8px;
+    border-style: solid;
+    border-color: transparent transparent transparent #333; /* Point arrow to right */
+}
+
+.notes-icon:hover .tooltip-notes {
+    visibility: visible;
+}
+
+@media (max-width: 767px) {
+    .td-notes {
+        white-space: normal;
+    }
+    
+    .text-muted-notes {
+        font-size: 0.85rem;
+    }
+}
+</style>
 <script>
 // Initialize when DOM is loaded
 document.addEventListener("DOMContentLoaded", function() {
@@ -1134,6 +1526,41 @@ window.onload = function() {
     </div>
 </div>
 
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const profileModal = document.getElementById('profileModal');
+
+    profileModal.addEventListener('shown.bs.modal', function () {
+        const defaultTab = document.querySelector('#attendance-tab');
+        const defaultTabPane = document.querySelector('#attendance');
+
+        // Ensure Bootstrap properly activates the tab
+        if (defaultTab && defaultTabPane) {
+            new bootstrap.Tab(defaultTab).show();
+        }
+    });
+
+    profileModal.addEventListener('hidden.bs.modal', function () {
+        // Reset all tabs
+        document.querySelectorAll('#profileTab .nav-link').forEach(tab => {
+            tab.classList.remove('active');
+            tab.setAttribute('aria-selected', 'false');
+        });
+
+        document.querySelectorAll('#profileTabContent .tab-pane').forEach(tabPane => {
+            tabPane.classList.remove('show', 'active');
+        });
+
+        // Reapply the default tab using Bootstrap's method
+        const defaultTab = document.querySelector('#attendance-tab');
+        if (defaultTab) {
+            new bootstrap.Tab(defaultTab).show();
+        }
+    });
+});
+</script>
+
 <!-- PROFILE Modal -->
 <div class="modal fade" id="profileModal" tabindex="-1" aria-labelledby="profileModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-lg">
@@ -1143,7 +1570,7 @@ window.onload = function() {
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
-                <ul class="nav nav-tabs" id="settingsTab" role="tablist">
+                <ul class="nav nav-tabs" id="profileTab" role="tablist">
                     <li class="nav-item" role="presentation">
                         <button class="nav-link active" id="attendance-tab" data-bs-toggle="tab" data-bs-target="#attendance" type="button" role="tab" aria-controls="attendance" aria-selected="true">
                             <i class="bi bi-calendar-check"></i>

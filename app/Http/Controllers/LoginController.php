@@ -7,9 +7,18 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Session;
 use App\Models\SystemDesign;
 use Illuminate\Support\Facades\DB;
+use App\Services\UserLogService;
+use Carbon\Carbon; // Make sure this is imported
 
 class LoginController extends Controller
 {
+
+    protected $userLogService;
+
+    public function __construct(UserLogService $userLogService) {
+        $this->userLogService = $userLogService;
+    }
+
     public function showLoginForm()
     {
         $systemDesign = SystemDesign::first();
@@ -53,6 +62,9 @@ class LoginController extends Controller
             
             // Store store permissions
             $this->storeStorePermissions($user, $request);
+
+            // Log using service
+            $this->userLogService->log('User LOGIN');
 
             return redirect()->back()->with('success', 'Log in successfully');
         }

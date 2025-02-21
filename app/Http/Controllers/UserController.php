@@ -10,9 +10,16 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Schema;
+use App\Services\UserLogService;
 
 class UserController extends Controller
 {
+
+    protected $userLogService;
+
+    public function __construct(UserLogService $userLogService) {
+        $this->userLogService = $userLogService;
+    } 
     
     public function showmyprivileges()
     {
@@ -56,6 +63,9 @@ class UserController extends Controller
                 'password' => Hash::make($validated['password']),
                 'role' => $validated['role'],
             ]);
+
+            // Log using service
+                    $this->userLogService->log('add user - ' . $validated['username']);
     
             return response()->json([
                 'success' => true,
@@ -92,6 +102,9 @@ class UserController extends Controller
                 $user->update([
                     'password' => Hash::make($request->password),
                 ]);
+
+                // Log using service
+                        $this->userLogService->log('User Update Password');
     
                 return back()->with('success', 'Password updated successfully!');
             } catch (\Exception $e) {
@@ -276,6 +289,8 @@ public function saveUserPrivileges(Request $request)
         
                 // Fetch the user
                 $user = User::find($data['user_id']);
+                $username = $user->username; // Store username for logging
+
                 if (!$user) {
                     return response()->json(['success' => false, 'message' => 'User not found']);
                 }
@@ -313,8 +328,41 @@ public function saveUserPrivileges(Request $request)
                     }
                 }
         
+                // Collect different types of modules
+                $mainModule = $data['main_module'];
+                $enabledSubModules = [];
+                $enabledStores = [];
+
+                // Collect enabled sub-modules
+                foreach ($subModules as $module) {
+                    if ($user->{$module} == 1) {
+                        $enabledSubModules[] = ucfirst($module);
+                    }
+                }
+
+                // Collect enabled stores
+                foreach ($storeColumns as $storeColumn) {
+                    if ($user->{$storeColumn} == 1) {
+                        $storeName = str_replace('store_', '', $storeColumn);
+                        $storeName = str_replace('_', ' ', $storeName);
+                        $enabledStores[] = ucfirst($storeName);
+                    }
+                }
+
+                // Format the log message
+                $logMessage = sprintf(
+                    'Update Privileges for User %s - Main: %s | Sub-Modules: %s | Stores: %s',
+                    $username,
+                    $mainModule,
+                    $enabledSubModules ? implode(', ', $enabledSubModules) : 'None',
+                    $enabledStores ? implode(', ', $enabledStores) : 'None'
+                );
+
                 // Save the user privileges
                 $user->save();
+
+                // Log using service
+                $this->userLogService->log($logMessage);
         
                 return response()->json(['success' => true, 'message' => 'User privileges updated successfully!']);
             } catch (\Illuminate\Validation\ValidationException $e) {
@@ -366,6 +414,9 @@ public function saveUserPrivileges(Request $request)
                 }
         
                 $user->update($updateData);
+
+                // Log using service
+                        $this->userLogService->log('Update data of User - ' . $request->username);
         
                 return response()->json([
                     'success' => true,
@@ -380,11 +431,18 @@ public function saveUserPrivileges(Request $request)
             }
         }
         
-    public function destroy($id)
+        public function destroy($id)
         {
             try {
+                // Get the user and username before deleting
                 $user = User::findOrFail($id);
+                $username = $user->username; // Store username for logging
+        
+                // Delete the user
                 $user->delete();
+        
+                // Log using service
+                $this->userLogService->log('Deleted User - ' . $username);
         
                 return response()->json([
                     'success' => true,
@@ -397,5 +455,5 @@ public function saveUserPrivileges(Request $request)
                     'message' => 'Failed to delete user. Please try again.'
                 ]);
             }
-        }   
+        }
 }    

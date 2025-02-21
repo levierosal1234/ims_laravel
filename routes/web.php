@@ -15,6 +15,8 @@ use Illuminate\Support\Facades\Schema;
 use App\Http\Controllers\USPSController;
 use App\Http\Controllers\UPSController;
 use App\Http\Controllers\UserSessionController;
+use App\Http\Controllers\EmployeeClockController;
+use App\Http\Controllers\UserLogsController;
 
 
 Route::get('/', function () {
@@ -91,7 +93,6 @@ Route::post('/add-store', [StoreController::class, 'addstore'])->name('add-store
 Route::delete('/delete-store/{id}', [StoreController::class, 'delete'])->name('delete-store');
 Route::get('/fetch-marketplaces', [StoreController::class, 'fetchMarketplaces']);
 Route::get('/fetch-marketplaces-tblstores', [StoreController::class, 'fetchMarketplacestblstores'])->name('fetchMarketplacestblstores');
-Route::post('/user/privileges/update', [UserPrivilegesController::class, 'update'])->name('update-user-privileges');
 
 Route::get('/dashboard/Systemdashboard', [AttendanceController::class, 'attendance']);
 Route::post('/attendance/clockin', [AttendanceController::class, 'clockIn'])->name('attendance.clockin');
@@ -101,6 +102,9 @@ Route::post('/attendance/update-hours', [AttendanceController::class, 'updateHou
 Route::post('/attendance/filter', [AttendanceController::class, 'filterAttendanceAjax'])->name('attendance.filter.ajax');
 Route::post('/attendance/auto-clockout', [AttendanceController::class, 'autoClockOut'])->name('auto-clockout');
 Route::post('/update-notes/{id}', [AttendanceController::class, 'updateNotes'])->name('update-notes');
+
+Route::get('/get-user-logs', [UserLogsController::class, 'getUserLogs']);
+Route::get('/get-time-records/{user_id}', [EmployeeClockController::class, 'getUserTimeRecords']);
 
 
 // AWS Inventory Routes

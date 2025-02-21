@@ -7,8 +7,17 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
 
+use App\Services\UserLogService;
+
 class AttendanceController extends Controller
 {
+
+    protected $userLogService;
+
+    public function __construct(UserLogService $userLogService) {
+        $this->userLogService = $userLogService;
+    }
+
     public function attendance()
     {
         // Get the current user's ID from the session or Auth
@@ -101,29 +110,34 @@ class AttendanceController extends Controller
     }
 
     public function clockIn(Request $request)
-    {
-        // Get the current user's ID
-        $currentUserId = Auth::user()->id;
-        $currentUsername = Auth::user()->username;
+{
+    // Get the current user's ID
+    $currentUserId = Auth::user()->id;
+    $currentUsername = Auth::user()->username;
 
-        // Get the current date and time
-        $currentDateTime = Carbon::now('America/Los_Angeles');
+    // Get the current date and time (set to 'America/Los_Angeles' timezone)
+    $currentDateTime = Carbon::now('America/Los_Angeles');
 
-        // Insert into the tblemployeeclocks table
-        DB::table('tblemployeeclocks')->insert([
-            'userid' => $currentUserId,
-            'Employee' => $currentUsername,
-            'TimeIn' => $currentDateTime,
-        ]);
+    // Insert into the tblemployeeclocks table
+    DB::table('tblemployeeclocks')->insert([
+        'userid' => $currentUserId,
+        'Employee' => $currentUsername,
+        'TimeIn' => $currentDateTime, // Carbon instance will be automatically cast to DATETIME
+    ]);
 
-        // Redirect back with a success message
-        return redirect()->back()->with('success_clockin', 'Clocked in successfully at ' . $currentDateTime->format('h:i A'));
-    }
+        // Log using service
+        $this->userLogService->log('Clockin');
+
+    // Redirect back with a success message
+    return redirect()->back()->with('success_clockin', 'Clocked in successfully at ' . $currentDateTime->format('h:i A'));
+}
+
 
     public function clockOut(Request $request)
     {
         // Get the current user's ID
         $currentUserId = Auth::user()->id;
+        $currentUsername = Auth::user()->username;
 
         // Get the current date and time
         $currentDateTime = Carbon::now('America/Los_Angeles');
@@ -142,6 +156,9 @@ class AttendanceController extends Controller
             DB::table('tblemployeeclocks')
                 ->where('ID', $lastRecord->ID) // Update only the last record by ID
                 ->update(['TimeOut' => $currentDateTime]);
+
+                // Log using service
+                $this->userLogService->log('Clockout');
 
             // Redirect back with a success message
             return redirect()->back()->with('success_clockout', 'Clocked out successfully at ' . $currentDateTime->format('h:i A'));
@@ -172,6 +189,9 @@ class AttendanceController extends Controller
                     'TimeOut' => $lastRecord->TimeIn,
                     'Notes' => 'System Automatically Clocked out with TimeOut matching TimeIn at ' . $lastRecord->TimeIn,
                 ]);
+
+                // Log using service
+                $this->userLogService->log('System Auto Clockout');
     
             // Return success response as JSON
             return response()->json([
@@ -302,6 +322,10 @@ class AttendanceController extends Controller
             ->update(['Notes' => $validatedData['notes']]);
     
         if ($updated) {
+
+            // Log using service
+            $this->userLogService->log('Save user time clock notes');
+
             return response()->json([
                 'success' => true,
                 'message' => 'Notes updated successfully.',

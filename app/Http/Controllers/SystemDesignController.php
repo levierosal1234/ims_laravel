@@ -5,9 +5,17 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use App\Models\SystemDesign;
+use App\Services\UserLogService;
 
 class SystemDesignController extends Controller
 {
+
+    protected $userLogService;
+
+    public function __construct(UserLogService $userLogService) {
+        $this->userLogService = $userLogService;
+    }
+
     public function update(Request $request)
     {
         // Validate the incoming request data
@@ -44,6 +52,9 @@ class SystemDesignController extends Controller
             'theme_color' => $systemDesign->theme_color,
             'logo' => $systemDesign->logo,
         ]);
+
+// Log using service
+        $this->userLogService->log('Update the System Design');
     
         // Return a success response
         return back()->with('success', 'System design updated successfully!');

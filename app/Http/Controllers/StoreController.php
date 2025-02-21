@@ -7,9 +7,17 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Database\Schema\Blueprint;
+use App\Services\UserLogService;
 
 class StoreController extends Controller
 {
+    protected $userLogService;
+
+    public function __construct(UserLogService $userLogService) 
+    {
+        $this->userLogService = $userLogService;
+    }
+
     // Method to fetch stores
     public function getStores()
     {
@@ -39,6 +47,9 @@ class StoreController extends Controller
         $store->MerchantID = ''; // Add as necessary
         $store->MarketplaceID = ''; // Add as necessary
         $store->save();
+
+            // Log after successful save
+            $this->userLogService->log('Store Added: ' . $storename);
     
         // Add a column to the 'tbluser' table if it doesn't already exist
         if (!Schema::hasColumn('tbluser', 'store_' . $sanitizedStorename)) {
@@ -93,6 +104,9 @@ class StoreController extends Controller
         
                 // Update the store with the new data
                 $store->update($updatedData);
+
+                // Log after successful save
+                $this->userLogService->log('Store Updated: ' . $request->storename);
         
                 return response()->json(['success' => true, 'message' => 'Store updated successfully.']);
             } catch (\Exception $e) {
@@ -129,6 +143,9 @@ class StoreController extends Controller
         
             // Delete the store
             $store->delete();
+
+            // Log after successful save
+            $this->userLogService->log('Store Deleted: ' . $sanitizedStoreName);
         
             // Return a success response
             return response()->json(['success' => true]);
