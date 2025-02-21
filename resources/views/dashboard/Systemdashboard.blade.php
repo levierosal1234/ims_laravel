@@ -82,7 +82,7 @@
 
         .content {
             margin-left: 0;
-            padding: 2rem;
+            padding: 0;
             transition: margin-left 0.3s ease-in-out;
         }
 
