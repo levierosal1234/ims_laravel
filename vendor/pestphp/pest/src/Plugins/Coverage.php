@@ -38,6 +38,11 @@ final class Coverage implements AddsOutput, HandlesArguments
     public bool $coverage = false;
 
     /**
+     * Whether it should show the coverage or not.
+     */
+    public bool $compact = false;
+
+    /**
      * The minimum coverage.
      */
     public float $coverageMin = 0.0;
@@ -124,6 +129,10 @@ final class Coverage implements AddsOutput, HandlesArguments
             $this->coverageExactly = (float) $exactlyOption;
         }
 
+        if ($_SERVER['COLLISION_PRINTER_COMPACT'] ?? false) {
+            $this->compact = true;
+        }
+
         return $originals;
     }
 
@@ -144,7 +153,7 @@ final class Coverage implements AddsOutput, HandlesArguments
                 exit(1);
             }
 
-            $coverage = \Pest\Support\Coverage::report($this->output);
+            $coverage = \Pest\Support\Coverage::report($this->output, $this->compact);
             $exitCode = (int) ($coverage < $this->coverageMin);
 
             if ($exitCode === 0 && $this->coverageExactly !== null) {

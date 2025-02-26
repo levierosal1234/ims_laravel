@@ -446,7 +446,7 @@ final class JunitXmlLogger
         if ($test->isTestMethod()) {
             assert($test instanceof TestMethod);
 
-            //$testCase->setAttribute('line', (string) $test->line()); // pest-removed
+            // $testCase->setAttribute('line', (string) $test->line()); // pest-removed
             $className = $this->converter->getTrimmedTestClassName($test); // pest-added
             $testCase->setAttribute('class', $className); // pest-changed
             $testCase->setAttribute('classname', str_replace('\\', '.', $className)); // pest-changed

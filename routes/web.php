@@ -93,7 +93,6 @@ Route::post('/add-store', [StoreController::class, 'addstore'])->name('add-store
 Route::delete('/delete-store/{id}', [StoreController::class, 'delete'])->name('delete-store');
 Route::get('/fetch-marketplaces', [StoreController::class, 'fetchMarketplaces']);
 Route::get('/fetch-marketplaces-tblstores', [StoreController::class, 'fetchMarketplacestblstores'])->name('fetchMarketplacestblstores');
-Route::post('/user/privileges/update', [UserPrivilegesController::class, 'update'])->name('update-user-privileges');
 
 Route::get('/dashboard/Systemdashboard', [AttendanceController::class, 'attendance']);
 Route::post('/attendance/clockin', [AttendanceController::class, 'clockIn'])->name('attendance.clockin');
@@ -105,6 +104,7 @@ Route::post('/attendance/auto-clockout', [AttendanceController::class, 'autoCloc
 Route::post('/update-notes/{id}', [AttendanceController::class, 'updateNotes'])->name('update-notes');
 
 Route::get('/get-user-logs', [UserLogsController::class, 'getUserLogs']);
+Route::get('/get-time-records/{user_id}', [EmployeeClockController::class, 'getUserTimeRecords']);
 
 
 // AWS Inventory Routes
@@ -202,6 +202,10 @@ use App\Http\Controllers\TestTableController;
 
 Route::get('/test', [TestTableController::class, 'index']);
 
+
+use App\Http\Controllers\tblproductController;
+
+Route::get('/products', [tblproductController::class, 'index']);
 
 Route::get('/check-user-privileges', [UserSessionController::class, 'checkUserPrivileges'])->middleware('auth');
 

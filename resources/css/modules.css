@@ -1,0 +1,174 @@
+.vue-container {
+    font-family: Arial, sans-serif;
+    background-color: #ffffffec;
+  }
+  
+  .vue-title {
+    text-align: left;
+    font-size: 1.5rem;
+    margin-bottom: 10px;
+    background-color: #b3e1fd;
+    padding: 5px;
+    color: #111;
+    font-weight: bold;
+  }
+  
+  .table-container {
+    overflow-x: auto;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    background: #fff;
+  }
+  
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.9rem;
+  }
+  
+  thead {
+    background-color: #f7f7f7;
+    border-bottom: 2px solid #ddd;
+  }
+  
+  th {
+    text-align: left;
+    padding: 10px 12px;
+    font-weight: bold;
+    color: #333;
+    white-space: nowrap;
+  }
+  
+  tbody tr:nth-child(even) {
+    background-color: #f9f9f9;
+  }
+  
+  tbody tr:hover {
+    background-color: #f1f1f1;
+  }
+  
+  td {
+    padding: 12px;
+    vertical-align: middle;
+    color: #333;
+    text-align: left;
+    white-space: normal;
+  }
+  
+  .checkbox-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 5px;
+  }
+  
+  .placeholder-date {
+    font-size: 0.85rem;
+    color: #666;
+  }
+  
+  .product-cell {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  
+  .product-thumbnail {
+    width: 60px;
+    height: 60px;
+    object-fit: cover;
+    border-radius: 4px;
+    border: 1px solid #ddd;
+  }
+  
+  .product-name {
+    color: #0073bb;
+    font-weight: 600;
+    text-decoration: none;
+    cursor: pointer;
+  }
+  
+  .product-name:hover {
+    text-decoration: underline;
+  }
+  
+  .more-details-btn {
+    background-color: #0073bb;
+    color: white;
+    border: none;
+    padding: 5px 10px;
+    cursor: pointer;
+    font-size: 0.85rem;
+    border-radius: 4px;
+    margin-left: 10px;
+  }
+  
+  .more-details-btn:hover {
+    background-color: #0056a3;
+  }
+  
+  .expanded-row {
+    background-color: #eef7ff;
+  }
+  
+  .expanded-content {
+    padding: 10px;
+    font-size: 0.9rem;
+    color: #333;
+    border-top: 1px solid #ddd;
+  }
+  
+  .pagination {
+    margin-top: 20px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 10px;
+  }
+  
+  .pagination-info {
+    font-size: 1rem;
+    color: #555;
+  }
+  
+  .pagination-button {
+    padding: 8px 12px;
+    font-size: 0.9rem;
+    color: #fff;
+    background-color: #0073bb;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+  }
+  
+  .pagination-button:disabled {
+    background-color: #ddd;
+    cursor: not-allowed;
+  }
+  
+  .pagination-button:not(:disabled):hover {
+    background-color: #0056a3;
+  }
+  
+  @media (max-width: 768px) {
+  
+  
+    .vue-title {
+      font-size: 1.2rem;
+    }
+  
+    .table-container {
+      overflow-x: auto;
+    }
+  
+    th, td {
+      padding: 8px;
+      font-size: 0.85rem;
+    }
+  
+    .pagination {
+      flex-direction: column;
+      gap: 5px;
+    }
+  }
+  

@@ -1,124 +1,120 @@
 <template>
-  <div class="orders-container">
-    <h1 class="orders-title">Testing</h1>
+  <div class="vue-container">
+    <h1 class="vue-title">Cleaning Module</h1>
     <div class="table-container">
       <table>
         <thead>
           <tr>
             <th>
-              <input type="checkbox" @click="toggleAll" />
+              <input type="checkbox" @click="toggleAll" v-model="selectAll" />
               <span class="header-date"></span>
             </th>
             <th>Details</th>
-            <th>Order ID</th>
-            <th>FNSKU</th>
-            <th>MSKU</th>
-            <th>Condition</th>
+            <th>Order Details</th>
             <th>Actions</th>
           </tr>
         </thead>
         <tbody>
-          <tr v-for="item in paginatedInventory" :key="item.id">
+          <tr v-for="(item, index) in inventory" :key="item.id">
             <td>
               <div class="checkbox-container">
                 <input type="checkbox" v-model="item.checked" />
-                <span class="placeholder-date">{{ item.shipBy || 'Placeholder Date' }}</span>
+                <span class="placeholder-date">{{ item.shipBy || 'N/A' }}</span>
+              </div>
+              <img :src="item.imageUrl" alt="Product Image" class="product-thumbnail" />
+            </td>
+            <td class="vue-details">
+              <span class="product-name">{{ item.AStitle }}</span>
+            </td>
+            <td class="vue-details">
+              <span><strong>ID:</strong> {{ item.ProductID }}</span><br />
+              <span><strong>ASIN:</strong> {{ item.ProductModuleLoc }}</span><br />
+              <span><strong>FNSKU:</strong> {{ item.serialnumber }}</span><br />
+              <span><strong>Condition:</strong> {{ item.gradingview }}</span>
+            </td>
+            <td>
+              {{ item.totalquantity }}
+              <button @click="toggleDetails(index)" class="more-details-btn">
+                {{ expandedRows[index] ? 'Less Details' : 'More Details' }}
+              </button>
+            </td>
+          </tr>
+          <tr v-if="expandedRows[index]" class="expanded-row">
+            <td colspan="4">
+              <div class="expanded-content">
+                <strong>Product Name:</strong> {{ item.ProductTitle }}
               </div>
             </td>
-            <td class="product-cell">
-              <img
-                :src="item.imageUrl"
-                alt="Product Image"
-                class="product-thumbnail"
-              />
-              <span class="product-name">{{ item.productname }}</span>
-            </td>
-            <td>{{ item.id }}</td>
-            <td>{{ item.fnsku }}</td>
-            <td>{{ item.msku }}</td>
-            <td>{{ item.condition }}</td>
-            <td>{{ item.totalquantity }}</td>
           </tr>
         </tbody>
       </table>
+      <!-- Pagination -->
       <div class="pagination">
-        <button
-          @click="prevPage"
-          :disabled="currentPage === 1"
-          class="pagination-button"
-        >
-          Previous
-        </button>
+        <button @click="prevPage" :disabled="currentPage === 1" class="pagination-button">Previous</button>
         <span class="pagination-info">Page {{ currentPage }} of {{ totalPages }}</span>
-        <button
-          @click="nextPage"
-          :disabled="currentPage === totalPages"
-          class="pagination-button"
-        >
-          Next
-        </button>
+        <button @click="nextPage" :disabled="currentPage === totalPages" class="pagination-button">Next</button>
       </div>
     </div>
   </div>
 </template>
 
 <script>
-import { eventBus } from './eventBus';
 import axios from 'axios';
+import { eventBus } from './eventBus'; // Using your event bus
+import '../../css/modules.css';
 
 export default {
-  name: 'orders',
+  name: 'ProductList',
   data() {
     return {
       inventory: [],
       currentPage: 1,
-      itemsPerPage: 10,
+      totalPages: 1,
       selectAll: false,
+      expandedRows: {},
     };
   },
   computed: {
-    filteredInventory() {
-      const searchQuery = eventBus.searchQuery.toLowerCase();
-      return this.inventory.filter((item) =>
-        item.productname.toLowerCase().includes(searchQuery)
-      );
-    },
-    totalPages() {
-      return Math.ceil(this.filteredInventory.length / this.itemsPerPage);
-    },
-    paginatedInventory() {
-      const startIndex = (this.currentPage - 1) * this.itemsPerPage;
-      return this.filteredInventory.slice(
-        startIndex,
-        startIndex + this.itemsPerPage
-      );
+    searchQuery() {
+      return eventBus.searchQuery; // Making search reactive
     },
   },
   methods: {
     async fetchInventory() {
       try {
-        const response = await axios.get(import.meta.env.VITE_API_URL);
-        this.inventory = response.data.map((item) => ({
-          ...item,
-          imageUrl: item.imageUrl || 'https://via.placeholder.com/60x60?text=No+Image',
-          checked: false,
-          shipBy: '', // Placeholder for future dates
-        }));
+        const response = await axios.get(`http://127.0.0.1:8000/products`, {
+          params: { search: this.searchQuery, page: this.currentPage, location: 'stockroom', },
+        });
+
+        this.inventory = response.data.data;
+        this.totalPages = response.data.last_page;
       } catch (error) {
         console.error('Error fetching inventory data:', error);
       }
     },
-    toggleAll() {
-      this.selectAll = !this.selectAll;
-      this.paginatedInventory.forEach((item) => {
-        item.checked = this.selectAll;
-      });
+    prevPage() {
+      if (this.currentPage > 1) {
+        this.currentPage--;
+        this.fetchInventory();
+      }
     },
     nextPage() {
-      if (this.currentPage < this.totalPages) this.currentPage++;
+      if (this.currentPage < this.totalPages) {
+        this.currentPage++;
+        this.fetchInventory();
+      }
     },
-    prevPage() {
-      if (this.currentPage > 1) this.currentPage--;
+    toggleAll() {
+      this.inventory.forEach((item) => (item.checked = this.selectAll));
+    },
+    toggleDetails(index) {
+      this.$set(this.expandedRows, index, !this.expandedRows[index]);
+    },
+  },
+  watch: {
+    searchQuery() {
+      this.currentPage = 1; // Reset to first page on search
+      this.fetchInventory();
     },
   },
   mounted() {
@@ -126,129 +122,3 @@ export default {
   },
 };
 </script>
-
-<style scoped>
-.orders-container {
-  padding: 20px;
-  font-family: Arial, sans-serif;
-  background-color: #f5f5f5;
-}
-
-.orders-title {
-  text-align: left;
-  font-size: 1.5rem;
-  margin-bottom: 10px;
-  color: #111;
-}
-
-.table-container {
-  overflow-x: auto;
-  border: 1px solid #ddd;
-  border-radius: 6px;
-  background: #fff;
-}
-
-table {
-  width: 100%;
-  border-collapse: collapse;
-  font-size: 0.9rem;
-}
-
-thead {
-  background-color: #f7f7f7;
-  border-bottom: 2px solid #ddd;
-}
-
-th {
-  text-align: left;
-  padding: 10px 12px;
-  font-weight: bold;
-  color: #333;
-  white-space: nowrap;
-}
-
-tbody tr:nth-child(even) {
-  background-color: #f9f9f9;
-}
-
-tbody tr:hover {
-  background-color: #f1f1f1;
-}
-
-td {
-  padding: 12px;
-  vertical-align: middle;
-  white-space: nowrap;
-  color: #333;
-  text-align: left;
-}
-
-.checkbox-container {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 5px;
-}
-
-.placeholder-date {
-  font-size: 0.85rem;
-  color: #666;
-}
-
-.product-cell {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-
-.product-thumbnail {
-  width: 60px;
-  height: 60px;
-  object-fit: cover;
-  border-radius: 4px;
-  border: 1px solid #ddd;
-}
-
-.product-name {
-  color: #0073bb;
-  font-weight: 600;
-  text-decoration: none;
-  cursor: pointer;
-}
-
-.product-name:hover {
-  text-decoration: underline;
-}
-
-.pagination {
-  margin-top: 20px;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  gap: 10px;
-}
-
-.pagination-info {
-  font-size: 1rem;
-  color: #555;
-}
-
-.pagination-button {
-  padding: 8px 12px;
-  font-size: 0.9rem;
-  color: #fff;
-  background-color: #0073bb;
-  border: none;
-  border-radius: 4px;
-  cursor: pointer;
-}
-
-.pagination-button:disabled {
-  background-color: #ddd;
-  cursor: not-allowed;
-}
-
-.pagination-button:not(:disabled):hover {
-  background-color: #0056a3;
-}
-</style>
