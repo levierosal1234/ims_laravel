@@ -3,6 +3,7 @@
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Cache;
 
 if (!function_exists('EbayCredentials')) {
     /**
@@ -15,7 +16,6 @@ if (!function_exists('EbayCredentials')) {
         try {
             $id = 3;
 
-            // Fetch eBay credentials from the database
             $credentials = DB::table('tblapis')
                 ->where('id', $id)
                 ->select(['client_id', 'client_secret', 'access_token', 'refresh_token', 'expires_in'])
@@ -23,15 +23,16 @@ if (!function_exists('EbayCredentials')) {
 
             if (!$credentials) {
                 Log::error("No keys found for the given client ID: {$id}");
-                return null;
+                return [];
             }
 
             return (array) $credentials;
         } catch (\Exception $e) {
             Log::error("Error retrieving credentials: " . $e->getMessage());
-            return null;
+            return [];
         }
     }
+
 }
 
 /**
@@ -116,4 +117,78 @@ if (!function_exists('EbayCredentials')) {
         }
     }
 
+}
+
+if (!function_exists('refreshEbayAccessToken')) {
+    function refreshEbayAccessToken($credentials)
+    {
+        // Fetch API credentials from the database
+        $apiRecord = DB::table('tblapis')->where('api_name', 'EBAY')->first();
+    
+        if (!$apiRecord || !$apiRecord->refresh_token) {
+            Log::error("Ebay OAuth Error: No refresh token found in tblapis.");
+            return null;
+        }
+    
+        $clientId = $credentials['client_id'];
+        $clientSecret = $credentials['client_secret'];
+        $tokenUrl = 'https://api.ebay.com/identity/v1/oauth2/token';
+    
+        try {
+            // Send request to get new access token
+            $response = Http::asForm()->withHeaders([
+                'Authorization' => 'Basic ' . base64_encode("{$clientId}:{$clientSecret}"),
+            ])->post($tokenUrl, [
+                'grant_type' => 'refresh_token',
+                'refresh_token' => $apiRecord->refresh_token,
+                'scope' => implode(' ', [
+                    'https://api.ebay.com/oauth/api_scope',
+                    'https://api.ebay.com/oauth/api_scope/sell.marketing.readonly',
+                    'https://api.ebay.com/oauth/api_scope/sell.inventory.readonly',
+                    'https://api.ebay.com/oauth/api_scope/sell.account.readonly',
+                    'https://api.ebay.com/oauth/api_scope/sell.fulfillment.readonly',
+                ]),
+            ]);
+    
+            $results = $response->json();
+    
+            if ($response->successful() && isset($results['access_token'])) {
+                $newAccessToken = $results['access_token'];
+                $expiresIn = $results['expires_in'] ?? '';
+                $refreshTokenExpiresIn = $results['refresh_token_expires_in'] ?? '';
+    
+                // Update tblapis with the new access token
+                DB::table('tblapis')
+                    ->where('api_name', 'EBAY')
+                    ->update([
+                        'access_token' => $newAccessToken,
+                        'updated_at' => now(),
+                    ]);
+
+                // Save the access token to a file
+                $filePath = "/home/u298641722/public_html/ims/Admin/modules/orders/tokens.json";
+                
+                try {
+                    file_put_contents($filePath, json_encode([
+                        'access_token' => $newAccessToken,
+                        'expires_in' => $expiresIn,
+                        'refresh_token' => $apiRecord->refresh_token,
+                        'refresh_token_expires_in' => $refreshTokenExpiresIn,
+                        'token_type' => 'User Access Token',
+                        'expiration_time' => time() + $expiresIn,
+                    ], JSON_PRETTY_PRINT));
+                } catch (\Exception $e) {
+                    Log::error("Failed to save tokens.json: " . $e->getMessage());
+                }
+
+                return $newAccessToken;
+            } else {
+                Log::error("Ebay OAuth Token Refresh Failed", ['response' => $results]);
+                return null;
+            }
+        } catch (\Exception $e) {
+            Log::error("Ebay OAuth Error: " . $e->getMessage());
+            return null;
+        }
+    }
 }

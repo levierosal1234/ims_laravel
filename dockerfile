@@ -7,7 +7,12 @@ RUN apt-get update && apt-get install -y \
     libfreetype6-dev \
     git \
     unzip \
-    curl
+    curl \
+    mariadb-client \
+    libonig-dev
+
+# Install PHP extensions
+RUN docker-php-ext-install pdo pdo_mysql gd mbstring
 
 # Install Node.js and npm
 RUN curl -fsSL https://deb.nodesource.com/setup_18.x | bash - \
@@ -23,10 +28,10 @@ WORKDIR /var/www/html
 COPY . .
 
 # Install PHP dependencies
-RUN composer install
+RUN composer install --no-dev --optimize-autoloader
 
 # Install frontend dependencies
-RUN npm install
+# RUN npm install && npm run build
 
 # Set permissions for Laravel storage and bootstrap cache
 RUN chmod -R 777 /var/www/html/storage /var/www/html/bootstrap/cache

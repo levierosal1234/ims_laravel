@@ -9,8 +9,6 @@ use Illuminate\Support\Facades\Log;
 // require app_path('Helpers/aws_helpers.php');
 require app_path('Helpers/aws_manual.php');
 
-
-
 class AwsInventoryController extends Controller
 {
 

@@ -182,6 +182,11 @@ Route::get('/apis/ebay-callback', action: function () {
     }
 });
 
+use App\Http\Controllers\Ebay\EbayController;
+
+Route::get('/ebay/orders', [EbayController::class, 'fetchOrders']);
+
+
 Route::get('/apis/ebay-login', action: function () {
     $clientId = 'LevieRos-imsweb-PRD-7abfbb41d-7a45e67e'; // Replace with your client ID
     $redirectUrl = 'https://ims.tecniquality.com/Admin/modules/orders/callback.php'; // Replace with your redirect URL
